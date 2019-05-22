@@ -43,18 +43,15 @@ class Locale
 class Flag
 {
     public $name;
-	public $defaultValue;
 
     /**
      * Конструктор
      * 
      * @param string $name - имя флага
-     * [@param bool $defaultValue = false] - значение по умолчанию
      */
-    public function __construct (string $name, bool $defaultValue = false)
+    public function __construct (string $name)
     {
-        $this->name 		= $name;
-		$this->defaultValue = $defaultValue;
+        $this->name = $name;
     }
 
     /**
@@ -78,7 +75,7 @@ class Flag
             return true;
         }
 
-        return $this->defaultValue;
+        return false;
     }
 }
 
