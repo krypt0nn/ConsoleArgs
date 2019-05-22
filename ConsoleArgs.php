@@ -140,7 +140,8 @@ class Param
             unset ($args[$key], $args[$key + 1]);
             $args = array_values ($args);
 
-            while (true)
+            do
+            {
                 try
                 {
                     $param[] = $this->parse ($args);
@@ -150,6 +151,9 @@ class Param
                 {
                     break;
                 }
+            }
+
+            while (end ($param) !== $this->defaultValue);
             
             return sizeof ($param) == 1 ?
                 $param[0] : $param;
