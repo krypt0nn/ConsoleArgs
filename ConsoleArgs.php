@@ -49,6 +49,7 @@ class Flag
      * Конструктор
      * 
      * @param string $name - имя флага
+     * [@param bool $defaultValue = false] - значение по умолчанию
      */
     public function __construct (string $name, bool $defaultValue = false)
     {
@@ -96,7 +97,8 @@ class Param
      * Конструктор
      * 
      * @param string $name - имя парамтера
-     * [@param string $defaultValue = null] - дефолтное значение параметра
+     * [@param string $defaultValue = null] - значение параметра по умолчанию
+     * [@param bool $required = false] - обязательно ли указание параметра
      */
     public function __construct (string $name, string $defaultValue = null, bool $required = false)
     {
