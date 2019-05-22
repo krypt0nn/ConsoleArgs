@@ -16,7 +16,7 @@ namespace ConsoleArgs;
     })
 ]))->execute (array_slice ($argv, 1));
 
-// array_slice нужен чтобы отбрезать аругмент вызова файла из консоли
+// array_slice нужен чтобы отрезать аргумент вызова файла из консоли
 ```
 
 ---
