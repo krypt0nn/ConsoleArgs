@@ -140,20 +140,13 @@ class Param
             unset ($args[$key], $args[$key + 1]);
             $args = array_values ($args);
 
-            do
+            try
             {
-                try
-                {
-                    $param[] = $this->parse ($args);
-                }
-
-                catch (\Throwable $e)
-                {
-                    break;
-                }
+                while (($altParam = $this->parse ($args)) !== $this->defaultValue)
+                    $param[] = $altParam;
             }
 
-            while (end ($param) !== $this->defaultValue);
+            catch (\Throwable $e) {}
             
             return sizeof ($param) == 1 ?
                 $param[0] : $param;
