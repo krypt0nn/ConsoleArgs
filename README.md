@@ -60,7 +60,7 @@ kek lol arbidol
 
 ### Работа с параметрами
 
-Функционал параметров предоставляет объект **Param**:
+Функционал параметров предоставляет объект **Param**, флагов - объект **Flag**:
 
 ```php
 <?php
@@ -75,11 +75,17 @@ namespace ConsoleArgs;
         if (is_array ($params['--glue']))
             $params['--glue'] = $params['--glue'][0];
         
-        echo implode (' ', $args);
+        echo $params['--base64'] ?
+            base64_encode (implode ($params['--glue'], $args)) :
+            implode ($params['--glue'], $args);
     }))->addParams ([
         // Первый аргумент - название параметра
         // Второй аргумент (необязательный) - значение по умолчанию
-        new Param ('--glue', ' ')
+        // Третий аргумент (необязательный) - обязательно ли нужно использовать данный параметр
+        new Param ('--glue', ' ', true),
+
+        // Аргумент - название флага
+        new Flag ('--base64')
     ])
 ]))->execute (array_slice ($argv, 1));
 ```
@@ -92,7 +98,7 @@ php index.php write kek lol arbidol
 
 Вывод:
 ```
-kek lol arbidol
+(исключение, т.к. не был использован параметр --glue)
 ```
 
 ---
@@ -104,6 +110,17 @@ php index.php write kek lol arbidol --glue ", "
 Вывод:
 ```
 kek, lol, arbidol
+```
+
+---
+
+```cmd
+php index.php write kek lol arbidol --glue ", " --base64
+```
+
+Вывод:
+```
+a2VrLCBsb2wsIGFyYmlkb2w=
 ```
 
 ### Разветвление команд

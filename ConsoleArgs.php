@@ -28,11 +28,55 @@ namespace ConsoleArgs;
  */
 class Locale
 {
-    public $execution_error           = '$callable must be any closure';
-    public $command_type_exception    = '$command must be ConsoleArgs\Command object or instance of him';
-    public $command_undefined_error   = 'You should write any available command';
-    public $undefined_param_exception = 'You should write param value';
-    public $param_type_exception      = '$param must be ConsoleArgs\Param object or instance of him';
+    public $execution_error            = '$callable must be any closure';
+    public $command_type_exception     = '$command must be ConsoleArgs\Command object or instance of him';
+    public $command_undefined_error    = 'You should write any available command';
+    public $unselected_value_exception = 'You should write param value';
+    public $param_type_exception       = '$param must be ConsoleArgs\Param or ConsoleArgs\Flag object or instance of him';
+    public $undefined_param_exception  = 'You must define this param';
+}
+
+/**
+ * Объект флагов
+ * Отвечает за создание флагов для команд
+ */
+class Flag
+{
+    public $name;
+
+    /**
+     * Конструктор
+     * 
+     * @param string $name - имя флага
+     */
+    public function __construct (string $name)
+    {
+        $this->name = $name;
+    }
+
+    /**
+     * Парсер флагов
+     * 
+     * @param array &$args - массив аргументов для парсинга
+     * 
+     * Возвращает состояние флага
+     */
+    public function parse (array &$args): bool
+    {
+        $args = array_values ($args);
+
+        if (($key = array_search ($this->name, $args)) !== false)
+        {
+            unset ($args[$key]);
+            $args = array_values ($args);
+
+            while ($this->parse ($args) !== false);
+            
+            return true;
+        }
+
+        return false;
+    }
 }
 
 /**
@@ -43,6 +87,7 @@ class Param
 {
     public $name;
     public $defaultValue;
+    public $required;
     protected $locale;
 
     /**
@@ -51,10 +96,13 @@ class Param
      * @param string $name - имя парамтера
      * [@param string $defaultValue = null] - дефолтное значение параметра
      */
-    public function __construct (string $name, string $defaultValue = null)
+    public function __construct (string $name, string $defaultValue = null, bool $required = false)
     {
         $this->name         = $name;
         $this->defaultValue = $defaultValue;
+        $this->required     = $required;
+
+        $this->locale = new Locale;
     }
 
     /**
@@ -85,21 +133,30 @@ class Param
         if (($key = array_search ($this->name, $args)) !== false)
         {
             if (!isset ($args[$key + 1]))
-                throw new \Exception ($this->locale->undefined_param_exception);
+                throw new \Exception ($this->locale->unselected_value_exception);
 
             $param = [$args[$key + 1]];
 
             unset ($args[$key], $args[$key + 1]);
             $args = array_values ($args);
 
-            while (($altParam = $this->parse ($args)) !== $this->defaultValue)
-            {
-                $param[] = $altParam;
-            }
+            while (true)
+                try
+                {
+                    $param[] = $this->parse ($args);
+                }
+
+                catch (\Throwable $e)
+                {
+                    break;
+                }
             
             return sizeof ($param) == 1 ?
                 $param[0] : $param;
         }
+
+        if ($this->required)
+            throw new \Exception ($this->locale->undefined_param_exception);
 
         return $this->defaultValue;
     }
@@ -156,7 +213,7 @@ class Command
     public function addParams (array $params): Command
     {
         foreach ($params as $param)
-            if ($param instanceof Param)
+            if ($param instanceof Param || $param instanceof Flag)
                 $this->params[$param->name] = $param;
 
             else throw new \Exception ($this->locale->param_type_exception);
@@ -245,10 +302,7 @@ class Manager
      */
     public function execute (array $args)
     {
-        $args = array_values (array_filter ($args, function ($item)
-        {
-            return strlen (trim ($item)) > 0;
-        }));
+        $args = array_values ($args);
 
         if (!isset ($args[0]))
             throw new \Exception ($this->locale->command_undefined_error);
