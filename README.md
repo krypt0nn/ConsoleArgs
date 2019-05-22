@@ -68,7 +68,7 @@ kek lol arbidol
 namespace ConsoleArgs;
 
 (new Manager ([
-    new Command ('write', function ($args, $params)
+    (new Command ('write', function ($args, $params)
     {
         // Если было указано несколько одинаковых параметров, то будет указан список всех введённых значений
         // Поэтому это так же нужно предусмотреть:
@@ -76,7 +76,7 @@ namespace ConsoleArgs;
             $params['--glue'] = $params['--glue'][0];
         
         echo implode (' ', $args);
-    })->addParams ([
+    }))->addParams ([
         // Первый аргумент - название параметра
         // Второй аргумент (необязательный) - значение по умолчанию
         new Param ('--glue', ' ')
