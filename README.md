@@ -85,7 +85,8 @@ namespace ConsoleArgs;
         new Param ('--glue', ' ', true),
 
         // Аргумент - название флага
-        new Flag ('--base64')
+        // "-b64" - алиас флага (альтернативное название)
+        (new Flag ('--base64'))->addAliase ('-b64')
     ])
 ]))->execute (array_slice ($argv, 1));
 ```

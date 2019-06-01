@@ -34,6 +34,7 @@ class Locale
     public $unselected_value_exception = 'You should write param value';
     public $param_type_exception       = '$param must be ConsoleArgs\Param or ConsoleArgs\Flag object or instance of him';
     public $undefined_param_exception  = 'You must define this param';
+    public $aliase_exists_exception    = 'This aliase already exists';
 }
 
 /**
@@ -42,7 +43,8 @@ class Locale
  */
 class Flag
 {
-    public $name;
+    public $names;
+    protected $locale;
 
     /**
      * Конструктор
@@ -51,7 +53,38 @@ class Flag
      */
     public function __construct (string $name)
     {
-        $this->name = $name;
+        $this->names = [$name];
+    }
+
+    /**
+     * Установка локализации
+     * 
+     * @param Locale $locale - объект локализации
+     * 
+     * @return Flag - возвращает сам себя
+     */
+    public function setLocale (Locale $locale): Param
+    {
+        $this->locale = $locale;
+
+        return $this;
+    }
+
+    /**
+     * Добавление алиаса
+     * 
+     * @param string $name - алиас для добавления
+     * 
+     * @return Flag - возвращает сам себя
+     */
+    public function addAliase (string $name)
+    {
+        if (array_search ($name, $this->names) !== false)
+            throw new \Exception ($this->locale->aliase_exists_exception);
+
+        $this->names[] = $name;
+
+        return $this;
     }
 
     /**
@@ -65,15 +98,16 @@ class Flag
     {
         $args = array_values ($args);
 
-        if (($key = array_search ($this->name, $args)) !== false)
-        {
-            unset ($args[$key]);
-            $args = array_values ($args);
+        foreach ($this->names as $name)
+            if (($key = array_search ($name, $args)) !== false)
+            {
+                unset ($args[$key]);
+                $args = array_values ($args);
 
-            while ($this->parse ($args) !== false);
-            
-            return true;
-        }
+                while ($this->parse ($args) !== false);
+                
+                return true;
+            }
 
         return false;
     }
@@ -85,7 +119,7 @@ class Flag
  */
 class Param
 {
-    public $name;
+    public $names;
     public $defaultValue;
     public $required;
     protected $locale;
@@ -99,7 +133,7 @@ class Param
      */
     public function __construct (string $name, string $defaultValue = null, bool $required = false)
     {
-        $this->name         = $name;
+        $this->names        = [$name];
         $this->defaultValue = $defaultValue;
         $this->required     = $required;
 
@@ -121,6 +155,23 @@ class Param
     }
 
     /**
+     * Добавление алиаса
+     * 
+     * @param string $name - алиас для добавления
+     * 
+     * @return Param - возвращает сам себя
+     */
+    public function addAliase (string $name)
+    {
+        if (array_search ($name, $this->names) !== false)
+            throw new \Exception ($this->locale->aliase_exists_exception);
+
+        $this->names[] = $name;
+
+        return $this;
+    }
+
+    /**
      * Парсер параметров
      * 
      * @param array &$args - массив аргументов для парсинга
@@ -131,27 +182,28 @@ class Param
     {
         $args = array_values ($args);
 
-        if (($key = array_search ($this->name, $args)) !== false)
-        {
-            if (!isset ($args[$key + 1]))
-                throw new \Exception ($this->locale->unselected_value_exception);
-
-            $param = [$args[$key + 1]];
-
-            unset ($args[$key], $args[$key + 1]);
-            $args = array_values ($args);
-
-            try
+        foreach ($this->names as $name)
+            if (($key = array_search ($name, $args)) !== false)
             {
-                while (($altParam = $this->parse ($args)) !== $this->defaultValue)
-                    $param[] = $altParam;
-            }
+                if (!isset ($args[$key + 1]))
+                    throw new \Exception ($this->locale->unselected_value_exception);
 
-            catch (\Throwable $e) {}
-            
-            return sizeof ($param) == 1 ?
-                $param[0] : $param;
-        }
+                $param = [$args[$key + 1]];
+
+                unset ($args[$key], $args[$key + 1]);
+                $args = array_values ($args);
+
+                try
+                {
+                    while (($altParam = $this->parse ($args)) !== $this->defaultValue)
+                        $param[] = $altParam;
+                }
+
+                catch (\Throwable $e) {}
+                
+                return sizeof ($param) == 1 ?
+                    $param[0] : $param;
+            }
 
         if ($this->required)
             throw new \Exception ($this->locale->undefined_param_exception);
@@ -212,7 +264,7 @@ class Command
     {
         foreach ($params as $param)
             if ($param instanceof Param || $param instanceof Flag)
-                $this->params[$param->name] = $param;
+                $this->params[current ($param->names)] = $param;
 
             else throw new \Exception ($this->locale->param_type_exception);
 
