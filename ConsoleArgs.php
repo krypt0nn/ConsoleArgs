@@ -32,16 +32,27 @@ class Locale
     public $command_type_exception     = '$command must be ConsoleArgs\Command object or instance of him';
     public $command_undefined_error    = 'You should write any available command';
     public $unselected_value_exception = 'You should write param value';
-    public $param_type_exception       = '$param must be ConsoleArgs\Param or ConsoleArgs\Flag object or instance of him';
+    public $param_type_exception       = '$param must be instance of ConsoleArgs\\Parameter interface';
     public $undefined_param_exception  = 'You must define this param';
     public $aliase_exists_exception    = 'This aliase already exists';
+}
+
+/**
+ * Интерфейс всех параметров команд
+ */
+interface Parameter
+{
+    /**
+     * Парсер значений
+     */
+    public function parse (array &$args);
 }
 
 /**
  * Объект флагов
  * Отвечает за создание флагов для команд
  */
-class Flag
+class Flag implements Parameter
 {
     public $names;
     protected $locale;
@@ -94,7 +105,7 @@ class Flag
      * 
      * Возвращает состояние флага
      */
-    public function parse (array &$args): bool
+    public function parse (array &$args)
     {
         $args = array_values ($args);
 
@@ -117,7 +128,7 @@ class Flag
  * Объект параметров
  * Отвечает за объявление параметров команд
  */
-class Param
+class Param implements Parameter
 {
     public $names;
     public $defaultValue;
@@ -213,6 +224,107 @@ class Param
 }
 
 /**
+ * Объект сеттеров
+ * Отвечает за объявление сет-параметров команд
+ */
+class Setter implements Parameter
+{
+    public $names;
+    public $separator;
+    public $defaultValue;
+    public $required;
+    protected $locale;
+
+    /**
+     * Конструктор
+     * 
+     * @param string $name - имя сеттера
+     * [@param string $separator = '='] - разделитель сеттера и значения
+     * [@param string $defaultValue = null] - значение сеттера по умолчанию
+     * [@param bool $required = false] - обязательно ли указание сеттера
+     */
+    public function __construct (string $name, string $separator = '=', string $defaultValue = null, bool $required = false)
+    {
+        $this->names        = [$name];
+        $this->separator    = $separator;
+        $this->defaultValue = $defaultValue;
+        $this->required     = $required;
+
+        $this->locale = new Locale;
+    }
+
+    /**
+     * Установка локализации
+     * 
+     * @param Locale $locale - объект локализации
+     * 
+     * @return Param - возвращает сам себя
+     */
+    public function setLocale (Locale $locale): Param
+    {
+        $this->locale = $locale;
+
+        return $this;
+    }
+
+    /**
+     * Добавление алиаса
+     * 
+     * @param string $name - алиас для добавления
+     * 
+     * @return Param - возвращает сам себя
+     */
+    public function addAliase (string $name)
+    {
+        if (array_search ($name, $this->names) !== false)
+            throw new \Exception ($this->locale->aliase_exists_exception);
+
+        $this->names[] = $name;
+
+        return $this;
+    }
+
+    /**
+     * Парсер параметров
+     * 
+     * @param array &$args - массив аргументов для парсинга
+     * 
+     * Возвращает найденый параметр или массив найдёных параметров, если их было указано несколько
+     */
+    public function parse (array &$args)
+    {
+        $args = array_values ($args);
+        $l    = strlen ($this->separator);
+
+        foreach ($this->names as $name)
+            foreach ($args as $id => $arg)
+                if (substr ($arg, 0, ($pos = strlen ($name) + $l)) == $name . $this->separator)
+                {
+                    $param = [substr ($arg, $pos)];
+
+                    unset ($args[$id]);
+                    $args = array_values ($args);
+
+                    try
+                    {
+                        while (($altParam = $this->parse ($args)) !== $this->defaultValue)
+                            $param[] = $altParam;
+                    }
+
+                    catch (\Throwable $e) {}
+                    
+                    return sizeof ($param) == 1 ?
+                        $param[0] : $param;
+                }
+
+        if ($this->required)
+            throw new \Exception ($this->locale->undefined_param_exception);
+
+        return $this->defaultValue;
+    }
+}
+
+/**
  * Объект команд
  * Отвечает за выполнение команд и работу с параметрами
  */
@@ -263,7 +375,7 @@ class Command
     public function addParams (array $params): Command
     {
         foreach ($params as $param)
-            if ($param instanceof Param || $param instanceof Flag)
+            if ($param instanceof Parameter)
                 $this->params[current ($param->names)] = $param;
 
             else throw new \Exception ($this->locale->param_type_exception);
@@ -307,22 +419,43 @@ class Command
 }
 
 /**
+ * Объект дефолтной команды
+ * Выполняется если менеджеру была передана некорректная команда
+ */
+class DefaultCommand extends Command
+{
+    /**
+     * Конструктор
+     * 
+     * [@param \Closure $callable = null] - анонимная функция для выполнения
+     */
+    public function __construct (\Closure $callable = null)
+    {
+        if ($callable !== null)
+            $this->callable = $callable;
+    }
+}
+
+/**
  * Менеджер команд
  * Предоставляет возможность работы с командами через аргументы консоли
  */
 class Manager
 {
     public $commands = [];
+    public $defaultCommand = null;
     protected $locale;
 
     /**
      * Конструктор
      * 
      * @param array $commands - список команд
+     * [@param DefaultCommand $defaultCommand = null] - объект дефолтной команды
      */
-    public function __construct (array $commands)
+    public function __construct (array $commands, DefaultCommand $defaultCommand = null)
     {
         $this->locale = new Locale;
+        $this->defaultCommand = $defaultCommand;
 
         foreach ($commands as $command)
             if ($command instanceof Command)
@@ -346,6 +479,20 @@ class Manager
     }
 
     /**
+     * Установка дефолтной команды
+     * 
+     * @param DefaultCommand $defaultCommand - объект дефолтной команды
+     * 
+     * @return Manager - возвращает сам себя
+     */
+    public function setDefault (DefaultCommand $defaultCommand): Manager
+    {
+        $this->defaultCommand = $defaultCommand;
+
+        return $this;
+    }
+
+    /**
      * Итерация выполнения по аргументам
      * 
      * @param array $args - список аргументов консоли
@@ -355,13 +502,19 @@ class Manager
         $args = array_values ($args);
 
         if (!isset ($args[0]))
-            throw new \Exception ($this->locale->command_undefined_error);
+        {
+            if ($this->defaultCommand !== null)
+                return $this->defaultCommand->execute ($args);
 
-        if (!isset ($this->commands[$args[0]]))
-            return false;
+            else throw new \Exception ($this->locale->command_undefined_error);
+        }
 
         $name = $args[0];
         $args = array_slice ($args, 1);
+
+        if (!isset ($this->commands[$name]))
+            return $this->defaultCommand !== null ?
+                $this->defaultCommand->execute ($args) : false;
 
         return $this->commands[$name]->execute ($args);
     }

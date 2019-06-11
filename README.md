@@ -88,7 +88,10 @@ namespace ConsoleArgs;
         // "-b64" - алиас флага (альтернативное название)
         (new Flag ('--base64'))->addAliase ('-b64')
     ])
-]))->execute (array_slice ($argv, 1));
+], new DefaultCommand (function ()
+{
+    echo 'You should write correct command name';
+})))->execute (array_slice ($argv, 1));
 ```
 
 ---
