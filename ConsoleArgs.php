@@ -207,7 +207,12 @@ class Param implements Parameter
                 try
                 {
                     while (($altParam = $this->parse ($args)) !== $this->defaultValue)
-                        $param[] = $altParam;
+                    {
+                        if (is_array ($altParam))
+                            $param = array_merge ($param, $altParam);
+
+                        else $param[] = $altParam;
+                    }
                 }
 
                 catch (\Throwable $e) {}
@@ -308,7 +313,12 @@ class Setter implements Parameter
                     try
                     {
                         while (($altParam = $this->parse ($args)) !== $this->defaultValue)
-                            $param[] = $altParam;
+                        {
+                            if (is_array ($altParam))
+                                $param = array_merge ($param, $altParam);
+    
+                            else $param[] = $altParam;
+                        }
                     }
 
                     catch (\Throwable $e) {}
