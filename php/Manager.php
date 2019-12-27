@@ -76,18 +76,18 @@ class Manager
         }
 
         $name = $args[0];
-        $args = array_slice ($args, 1);
+        $dargs = array_slice ($args, 1);
 
         if (!isset ($this->commands[$name]))
         {
             foreach ($this->commands as $command)
                 if (in_array ($name, $command->aliases))
-                    return $command->execute ($args);
+                    return $command->execute ($dargs);
 
             return $this->defaultCommand !== null ?
                 $this->defaultCommand->execute ($args) : false;
         }
 
-        return $this->commands[$name]->execute ($args);
+        return $this->commands[$name]->execute ($dargs);
     }
 }
