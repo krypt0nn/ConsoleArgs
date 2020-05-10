@@ -8,8 +8,10 @@ namespace ConsoleArgs;
  */
 class Flag implements Parameter
 {
-    public $names;
-    protected $locale;
+    public array $names;
+    public ?string $description = null; // Описание параметра, которое будет прикреплено к HelpCommand
+
+    protected Locale $locale;
 
     /**
      * Конструктор
@@ -18,7 +20,22 @@ class Flag implements Parameter
      */
     public function __construct (string $name)
     {
-        $this->names = [$name];
+        $this->names  = [$name];
+        $this->locale = new Locale;
+    }
+
+    /**
+     * Установка описания
+     * 
+     * @param string $description - описание
+     * 
+     * @return Parameter
+     */
+    public function setDescription (string $description): Parameter
+    {
+        $this->description = $description;
+
+        return $this;
     }
 
     /**
@@ -26,9 +43,9 @@ class Flag implements Parameter
      * 
      * @param Locale $locale - объект локализации
      * 
-     * @return Flag - возвращает сам себя
+     * @return Parameter
      */
-    public function setLocale (Locale $locale): Param
+    public function setLocale (Locale $locale): Parameter
     {
         $this->locale = $locale;
 
@@ -40,12 +57,13 @@ class Flag implements Parameter
      * 
      * @param string $name - алиас для добавления
      * 
-     * @return Flag - возвращает сам себя
+     * @return Parameter
      */
-    public function addAliase (string $name)
+    public function addAliase (string $name): Parameter
     {
-        if (array_search ($name, $this->names) !== false)
-            throw new \Exception ($this->locale->aliase_exists_exception);
+        if (in_array ($name, $this->names))
+            throw new \Exception (is_callable ($this->locale->aliase_exists_exception) ?
+                ($this->locale->aliase_exists_exception) ($this, $name) : $this->locale->aliase_exists_exception);
 
         $this->names[] = $name;
 

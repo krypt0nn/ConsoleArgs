@@ -8,20 +8,22 @@ namespace ConsoleArgs;
  */
 class Command
 {
-    public $name;
-    public $callable;
-    public $params  = [];
-    public $aliases = [];
+    public string $name; // Название команды
+    public ?string $description = null; // Описание команды, которое будет прикреплено к HelpCommand
 
-    protected $locale;
+    public $callable;
+    public array $params  = [];
+    public array $aliases = [];
+
+    protected Locale $locale;
 
     /**
      * Конструктор
      * 
      * @param string $name - имя команды
-     * [@param \Closure $callable = null] - анонимная функция для выполнения
+     * [@param callable $callable = null] - анонимная функция для выполнения
      */
-    public function __construct (string $name, \Closure $callable = null)
+    public function __construct (string $name, callable $callable = null)
     {
         $this->name   = $name;
         $this->locale = new Locale;
@@ -31,11 +33,25 @@ class Command
     }
 
     /**
+     * Установка описания команде
+     * 
+     * @param string $description - описание
+     * 
+     * @return Command
+     */
+    public function setDescription (string $description): Command
+    {
+        $this->description = $description;
+
+        return $this;
+    }
+
+    /**
      * Установка локализации
      * 
      * @param Locale $locale - объект локализации
      * 
-     * @return Command - возвращает сам себя
+     * @return Command
      */
     public function setLocale (Locale $locale): Command
     {
@@ -49,7 +65,7 @@ class Command
      * 
      * @param array $params - список параметров для установки
      * 
-     * @return Command - возвращает сам себя
+     * @return Command
      */
     public function addParams (array $params): Command
     {
@@ -57,7 +73,8 @@ class Command
             if ($param instanceof Parameter)
                 $this->params[current ($param->names)] = $param;
 
-            else throw new \Exception ($this->locale->param_type_exception);
+            else throw new \Exception (is_callable ($this->locale->param_type_exception) ?
+                ($this->locale->param_type_exception) ($this, $param) : $this->locale->param_type_exception);
 
         return $this;
     }
@@ -67,12 +84,13 @@ class Command
      * 
      * @param string $name - алиас для добавления
      * 
-     * @return Command - возвращает сам себя
+     * @return Command
      */
-    public function addAliase (string $name)
+    public function addAliase (string $name): Command
     {
-        if (array_search ($name, $this->aliases) !== false)
-            throw new \Exception ($this->locale->aliase_exists_exception);
+        if (in_array ($name, $this->aliases))
+            throw new \Exception (is_callable ($this->locale->aliase_exists_exception) ?
+                ($this->locale->aliase_exists_exception) ($this, $name) : $this->locale->aliase_exists_exception);
 
         $this->aliases[] = $name;
 
@@ -103,13 +121,14 @@ class Command
      */
     public function execute (array &$args)
     {
-        if ($this->callable instanceof \Closure)
+        if (is_callable ($this->callable))
         {
             $params = $this->getParams ($args);
 
             return $this->callable->call ($this, array_values ($args), $params);
         }
 
-        throw new \Exception ($this->locale->execution_error);
+        throw new \Exception (is_callable ($this->locale->execution_error) ?
+            ($this->locale->execution_error) ($this) : $this->locale->execution_error);
     }
 }

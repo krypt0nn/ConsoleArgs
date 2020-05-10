@@ -8,11 +8,14 @@ namespace ConsoleArgs;
  */
 class Setter implements Parameter
 {
-    public $names;
-    public $separator;
-    public $defaultValue;
-    public $required;
-    protected $locale;
+    public array $names;
+    public ?string $description = null; // Описание параметра, которое будет прикреплено к HelpCommand
+
+    public string $separator;
+    public ?string $defaultValue;
+    public bool $required;
+
+    protected Locale $locale;
 
     /**
      * Конструктор
@@ -33,13 +36,27 @@ class Setter implements Parameter
     }
 
     /**
+     * Установка описания
+     * 
+     * @param string $description - описание
+     * 
+     * @return Parameter
+     */
+    public function setDescription (string $description): Parameter
+    {
+        $this->description = $description;
+
+        return $this;
+    }
+
+    /**
      * Установка локализации
      * 
      * @param Locale $locale - объект локализации
      * 
-     * @return Param - возвращает сам себя
+     * @return Parameter
      */
-    public function setLocale (Locale $locale): Param
+    public function setLocale (Locale $locale): Parameter
     {
         $this->locale = $locale;
 
@@ -51,12 +68,13 @@ class Setter implements Parameter
      * 
      * @param string $name - алиас для добавления
      * 
-     * @return Param - возвращает сам себя
+     * @return Parameter
      */
-    public function addAliase (string $name)
+    public function addAliase (string $name): Parameter
     {
-        if (array_search ($name, $this->names) !== false)
-            throw new \Exception ($this->locale->aliase_exists_exception);
+        if (in_array ($name, $this->names))
+            throw new \Exception (is_callable ($this->locale->aliase_exists_exception) ?
+                ($this->locale->aliase_exists_exception) ($this, $name) : $this->locale->aliase_exists_exception);
 
         $this->names[] = $name;
 
@@ -102,7 +120,8 @@ class Setter implements Parameter
                 }
 
         if ($this->required)
-            throw new \Exception (str_replace ('%param_name%', current ($this->names), $this->locale->undefined_param_exception));
+            throw new \Exception (is_callable ($this->locale->undefined_param_exception) ?
+                ($this->locale->undefined_param_exception) ($this) : str_replace ('%param_name%', current ($this->names), $this->locale->undefined_param_exception));
 
         return $this->defaultValue;
     }

@@ -7,16 +7,15 @@
  * (at your option) any later version.
  * 
  * @package     ConsoleArgs
- * @copyright   2019 Podvirnyy Nikita (KRypt0n_)
+ * @copyright   2019 - 2020 Podvirnyy Nikita (Observer KRypt0n_)
  * @license     GNU GPLv3 <https://www.gnu.org/licenses/gpl-3.0.html>
- * @license     Enfesto Studio Group license <https://vk.com/topic-113350174_36400959>
- * @author      Podvirnyy Nikita (KRypt0n_)
+ * @author      Podvirnyy Nikita (Observer KRypt0n_)
  * 
  * Contacts:
  *
  * Email: <suimin.tu.mu.ga.mi@gmail.com>
- * VK:    vk.com/technomindlp
- *        vk.com/hphp_convertation
+ * VK:    <https://vk.com/technomindlp>
+ *        <https://vk.com/hphp_convertation>
  * 
  */
 
@@ -29,4 +28,5 @@ require 'php/Parameters/Param.php';
 require 'php/Parameters/Setter.php';
 require 'php/Command.php';
 require 'php/DefaultCommand.php';
+require 'php/HelpCommand.php';
 require 'php/Manager.php';

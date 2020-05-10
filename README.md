@@ -1,8 +1,16 @@
-# ConsoleArgs
+<h1 align="center">🔥 ConsoleArgs 🔥</h1>
 
-Класс для реализации работы с аргументами командной строки для **PHP** 7+
+**ConsoleArgs** - библиотека для реализации работы с аргументами командной строки для PHP 7.4
 
-Примеры работы *(пусть наш файл будет называться index.php)*:
+### Установка
+
+```
+php qero.phar i KRypt0nn/ConsoleArgs
+```
+
+[Что такое Qero?](https://github.com/KRypt0nn/Qero)
+
+### Примеры работы
 
 ```php
 <?php
@@ -21,7 +29,7 @@ namespace ConsoleArgs;
 
 ---
 
-```cmd
+```
 php index.php hello
 ```
 
@@ -49,7 +57,7 @@ namespace ConsoleArgs;
 
 ---
 
-```cmd
+```
 php index.php write kek lol arbidol
 ```
 
@@ -80,9 +88,9 @@ namespace ConsoleArgs;
             implode ($params['--glue'], $args);
     }))->addParams ([
         // Первый аргумент - название параметра
-        // Второй аргумент (необязательный) - значение по умолчанию
-        // Третий аргумент (необязательный) - обязательно ли нужно использовать данный параметр
-        new Param ('--glue', ' ', true),
+        // Второй аргумент (не обязательный) - значение по умолчанию
+        // Третий аргумент (не обязательный) - обязательно ли нужно использовать данный параметр
+        new Param ('--glue', ' '),
 
         // Аргумент - название флага
         // "-b64" - алиас флага (альтернативное название)
@@ -96,7 +104,7 @@ namespace ConsoleArgs;
 
 ---
 
-```cmd
+```
 php index.php write kek lol arbidol
 ```
 
@@ -107,7 +115,7 @@ php index.php write kek lol arbidol
 
 ---
 
-```cmd
+```
 php index.php write kek lol arbidol --glue ", "
 ```
 
@@ -118,7 +126,7 @@ kek, lol, arbidol
 
 ---
 
-```cmd
+```
 php index.php write kek lol arbidol --glue ", " --base64
 ```
 
@@ -147,11 +155,6 @@ namespace ConsoleArgs;
 
             new Command ('2', function ()
             {
-                echo 'WinForms PHP'. PHP_EOL;
-            }),
-
-            new Command ('3', function ()
-            {
                 echo 'Every Software'. PHP_EOL;
             })
         ]))->execute ($args);
@@ -161,7 +164,7 @@ namespace ConsoleArgs;
 
 ---
 
-```cmd
+```
 php index.php test 1
 ```
 
@@ -172,13 +175,52 @@ Enfesto Studio
 
 ---
 
-```cmd
+```
 php index.php aliase_test 2
 ```
 
 Вывод:
 ```
-WinForms PHP
+Every Software
+```
+
+### Команда помощи
+
+```php
+<?php
+
+namespace ConsoleArgs;
+
+$manager = new Manager ([
+    (new Command ('write', function ($args, $params)
+    {
+        if (is_array ($params['--glue']))
+            $params['--glue'] = $params['--glue'][0];
+        
+        echo implode ($params['--glue'], $args);
+    }))
+        ->setDescription ('Output entered message')
+        ->addParams ([
+            (new Param ('--glue', ' '))->addAliase ('-g')
+        ])
+]);
+
+$manager
+    ->addCommand (new HelpCommand ($manager))
+    ->execute (array_slice ($argv, 1));
+```
+
+---
+
+```
+php index.php help
+```
+
+Вывод:
+```
+write — Output entered message
+       Not required:
+         --glue " " (-g)
 ```
 
 ### Локализации

@@ -3,7 +3,7 @@
 namespace ConsoleArgs;
 
 /**
- * Объект дефолтной команды
+ * Объект команды по умолчанию
  * Выполняется если менеджеру была передана некорректная команда
  */
 class DefaultCommand extends Command
@@ -11,9 +11,9 @@ class DefaultCommand extends Command
     /**
      * Конструктор
      * 
-     * [@param \Closure $callable = null] - анонимная функция для выполнения
+     * [@param callable $callable = null] - анонимная функция для выполнения
      */
-    public function __construct (\Closure $callable = null)
+    public function __construct (callable $callable = null)
     {
         if ($callable !== null)
             $this->callable = $callable;

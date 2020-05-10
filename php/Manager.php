@@ -8,9 +8,10 @@ namespace ConsoleArgs;
  */
 class Manager
 {
-    public $commands = [];
-    public $defaultCommand = null;
-    protected $locale;
+    public array $commands = [];
+    public ?DefaultCommand $defaultCommand = null;
+    
+    protected Locale $locale;
 
     /**
      * Конструктор
@@ -27,7 +28,8 @@ class Manager
             if ($command instanceof Command)
                 $this->commands[$command->name] = $command;
 
-            else throw new \Exception ($this->locale->command_type_exception);
+            else throw new \Exception (is_callable ($this->locale->command_type_exception) ?
+                ($this->locale->command_type_exception) ($this, $command) : $this->locale->command_type_exception);
     }
 
     /**
@@ -45,9 +47,23 @@ class Manager
     }
 
     /**
-     * Установка дефолтной команды
+     * Добавление новой команды менеджеру
      * 
-     * @param DefaultCommand $defaultCommand - объект дефолтной команды
+     * @param Command $command - команда для добавления
+     * 
+     * @return Manager - возвращает сам себя
+     */
+    public function addCommand (Command $command): Manager
+    {
+        $this->commands[$command->name] = $command;
+
+        return $this;
+    }
+
+    /**
+     * Установка команды по умолчанию
+     * 
+     * @param DefaultCommand $defaultCommand - объект команды по умолчанию
      * 
      * @return Manager - возвращает сам себя
      */
@@ -72,10 +88,11 @@ class Manager
             if ($this->defaultCommand !== null)
                 return $this->defaultCommand->execute ($args);
 
-            else throw new \Exception ($this->locale->command_undefined_error);
+            else throw new \Exception (is_callable ($this->locale->command_undefined_error) ?
+                ($this->locale->command_undefined_error) () : $this->locale->command_undefined_error);
         }
 
-        $name = $args[0];
+        $name  = $args[0];
         $dargs = array_slice ($args, 1);
 
         if (!isset ($this->commands[$name]))
@@ -84,8 +101,11 @@ class Manager
                 if (in_array ($name, $command->aliases))
                     return $command->execute ($dargs);
 
-            return $this->defaultCommand !== null ?
-                $this->defaultCommand->execute ($args) : false;
+            if ($this->defaultCommand !== null)
+                return $this->defaultCommand->execute ($args);
+
+            throw new \Exception (is_callable ($this->locale->command_not_exists_error) ?
+                ($this->locale->command_not_exists_error) ($this, $name) : $this->locale->command_not_exists_error);
         }
 
         return $this->commands[$name]->execute ($dargs);
