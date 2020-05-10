@@ -51,9 +51,12 @@ class HelpCommand extends Command
 
                         else $not_required[] = $param;
 
+                    if ($command->description)
+                        echo str_repeat (' ', $commandMaxLength);
+
                     if (sizeof ($required) > 0)
                     {
-                        echo str_repeat (' ', $commandMaxLength + 3) .'Required:'. PHP_EOL;
+                        echo '  Required:'. PHP_EOL;
 
                         $messages = [];
                         $messageMaxLength = 0;
@@ -61,7 +64,7 @@ class HelpCommand extends Command
                         foreach ($required as $id => $param)
                         {
                             $value = $param->defaultValue ?? '';
-                            $value = $value ? ($param->separator ?? ' ') .'"'. $value .'"' : '';
+                            $value = $value ? (isset ($param->separator) ? ($param->separator != '' ? $param->separator .'"'. $value .'"' : $value) : ' "'. $value .'"') : '';
 
                             $messages[$id] = str_repeat (' ', $commandMaxLength + 5) . current ($param->names) . $value;
 
@@ -85,9 +88,11 @@ class HelpCommand extends Command
                     if (sizeof ($not_required) > 0)
                     {
                         if (sizeof ($required) > 0)
-                            echo PHP_EOL;
+                            echo PHP_EOL . str_repeat (' ', $commandMaxLength + 3);
+
+                        else echo '  ';
                         
-                        echo str_repeat (' ', $commandMaxLength + 3) .'Not required:'. PHP_EOL;
+                        echo 'Not required:'. PHP_EOL;
 
                         $messages = [];
                         $messageMaxLength = 0;
@@ -95,7 +100,7 @@ class HelpCommand extends Command
                         foreach ($not_required as $id => $param)
                         {
                             $value = $param->defaultValue ?? '';
-                            $value = $value ? ($param->separator ?? ' ') .'"'. $value .'"' : '';
+                            $value = $value ? (isset ($param->separator) ? ($param->separator != '' ? $param->separator .'"'. $value .'"' : $value) : ' "'. $value .'"') : '';
 
                             $messages[$id] = str_repeat (' ', $commandMaxLength + 5) . current ($param->names) . $value;
 
@@ -118,9 +123,9 @@ class HelpCommand extends Command
                             echo PHP_EOL;
                         }
                     }
-
-                    echo PHP_EOL;
                 }
+
+                echo PHP_EOL;
             }
         };
     }
