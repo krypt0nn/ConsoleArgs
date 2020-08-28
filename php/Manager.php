@@ -77,37 +77,117 @@ class Manager
     /**
      * Итерация выполнения по аргументам
      * 
-     * @param array $args - список аргументов консоли
+     * @throws \Exception - выбрасывает исключение если указан неверный тип $args
+     * 
+     * @param string|array $args - список аргументов консоли
      */
-    public function execute (array $args)
+    public function execute ($args)
     {
-        $args = array_values ($args);
+        if (is_string ($args))
+            return $this->execute (self::parse ($args));
 
-        if (!isset ($args[0]))
+        elseif (is_array ($args))
         {
-            if ($this->defaultCommand !== null)
-                return $this->defaultCommand->execute ($args);
+            $args = array_values ($args);
 
-            else throw new \Exception (is_callable ($this->locale->command_undefined_error) ?
-                ($this->locale->command_undefined_error) () : $this->locale->command_undefined_error);
+            if (!isset ($args[0]))
+            {
+                if ($this->defaultCommand !== null)
+                    return $this->defaultCommand->execute ($args);
+
+                else throw new \Exception (is_callable ($this->locale->command_undefined_error) ?
+                    ($this->locale->command_undefined_error) () : $this->locale->command_undefined_error);
+            }
+
+            $name  = $args[0];
+            $dargs = array_slice ($args, 1);
+
+            if (!isset ($this->commands[$name]))
+            {
+                foreach ($this->commands as $command)
+                    if (in_array ($name, $command->aliases))
+                        return $command->execute ($dargs);
+
+                if ($this->defaultCommand !== null)
+                    return $this->defaultCommand->execute ($args);
+
+                throw new \Exception (is_callable ($this->locale->command_not_exists_error) ?
+                    ($this->locale->command_not_exists_error) ($this, $name) : $this->locale->command_not_exists_error);
+            }
+
+            return $this->commands[$name]->execute ($dargs);
         }
 
-        $name  = $args[0];
-        $dargs = array_slice ($args, 1);
+        else throw new \Exception ('Incorrect $args type');
+    }
 
-        if (!isset ($this->commands[$name]))
+    /**
+     * Парсинг аргументов командной строки
+     * 
+     * @param string $args - строка для парсинга
+     * 
+     * @return array - возвращает аргументы из строки
+     */
+    public static function parse (string $args): array
+    {
+        $arguments = [];
+        $argument  = '';
+
+        $quotes   = ['"', '\''];
+        $break    = null;
+        $breakEnd = -1;
+
+        for ($i = 0, $length = strlen ($args); $i < $length; ++$i)
         {
-            foreach ($this->commands as $command)
-                if (in_array ($name, $command->aliases))
-                    return $command->execute ($dargs);
+            if (
+                in_array ($args[$i], $quotes) &&
+                (($break !== null && $break == $args[$i]) || $break === null) && 
+                (
+                    ($break === null && ($i == 0 || $args[$i - 1] == ' ')) ||
+                    ($break !== null && ($i + 1 == $length || $args[$i + 1] == ' '))
+                )
+            )
+            {
+                $shield = false;
 
-            if ($this->defaultCommand !== null)
-                return $this->defaultCommand->execute ($args);
+                for ($j = $i - 1; $args[$j] == '\\'; --$j)
+                    $shield = !$shield;
 
-            throw new \Exception (is_callable ($this->locale->command_not_exists_error) ?
-                ($this->locale->command_not_exists_error) ($this, $name) : $this->locale->command_not_exists_error);
+                if (!$shield)
+                    $break = $break === null ? $args[$i] : null;
+
+                if ($break === null)
+                    $breakEnd = $i + 1;
+
+                continue;
+            }
+
+            if ($args[$i] == ' ' && $break === null)
+            {
+                if ($argument != '' || $breakEnd == $i)
+                {
+                    $arguments[] = $argument;
+                    $argument    = '';
+                }
+
+                continue;
+            }
+
+            $argument .= $args[$i];
         }
 
-        return $this->commands[$name]->execute ($dargs);
+        if ($argument != '')
+        {
+            if ($break !== null)
+            {
+                $arguments[] = $break;
+
+                $arguments = array_merge ($arguments, self::parse (substr ($argument, 1)));
+            }
+
+            else $arguments[] = $argument;
+        }
+
+        return array_map ('stripslashes', $arguments);
     }
 }
