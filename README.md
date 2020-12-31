@@ -1,14 +1,12 @@
-<h1 align="center">🔥 ConsoleArgs 🔥</h1>
+<h1 align="center">🚀 ConsoleArgs</h1>
 
 **ConsoleArgs** - библиотека для реализации работы с аргументами командной строки для PHP 7.4
 
 ### Установка
 
 ```
-php qero.phar i KRypt0nn/ConsoleArgs
+composer require krypt0nn/consoleargs
 ```
-
-[Что такое Qero?](https://github.com/KRypt0nn/Qero)
 
 ### Примеры работы
 
