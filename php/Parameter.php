@@ -20,7 +20,7 @@ interface Parameter
     /**
      * Добавление алиаса
      */
-    public function addAliase (string $name): Parameter;
+    public function addAlias (string $name): Parameter;
 
     /**
      * Парсер значений

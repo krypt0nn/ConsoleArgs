@@ -7,7 +7,7 @@
  * (at your option) any later version.
  * 
  * @package     ConsoleArgs
- * @copyright   2019 - 2020 Podvirnyy Nikita (Observer KRypt0n_)
+ * @copyright   2019 - 2021 Podvirnyy Nikita (Observer KRypt0n_)
  * @license     GNU GPL-3.0 <https://www.gnu.org/licenses/gpl-3.0.html>
  * @author      Podvirnyy Nikita (Observer KRypt0n_)
  * 

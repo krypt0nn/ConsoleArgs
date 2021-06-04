@@ -67,11 +67,11 @@ class Param implements Parameter
      * 
      * @return Parameter
      */
-    public function addAliase (string $name): Parameter
+    public function addAlias (string $name): Parameter
     {
         if (in_array ($name, $this->names))
-            throw new \Exception (is_callable ($this->locale->aliase_exists_exception) ?
-                ($this->locale->aliase_exists_exception) ($this, $name) : $this->locale->aliase_exists_exception);
+            throw new \Exception (is_callable ($this->locale->alias_exists_exception) ?
+                ($this->locale->alias_exists_exception) ($this, $name) : $this->locale->alias_exists_exception);
 
         $this->names[] = $name;
 

@@ -16,10 +16,10 @@ class Manager
     /**
      * Конструктор
      * 
-     * @param array $commands - список команд
+     * [@param array $commands = []] - список команд
      * [@param DefaultCommand $defaultCommand = null] - объект дефолтной команды
      */
-    public function __construct (array $commands, DefaultCommand $defaultCommand = null)
+    public function __construct (array $commands = [], DefaultCommand $defaultCommand = null)
     {
         $this->locale = new Locale;
         $this->defaultCommand = $defaultCommand;

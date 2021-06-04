@@ -2,7 +2,7 @@
     "name": "krypt0nn/consoleargs",
     "description": "PHP library which add a few classes to realize your own command manager",
     "keywords": ["CLI", "console"],
-    "version": "2.1.1",
+    "version": "2.1.2",
     "homepage": "https://github.com/KRypt0nn/ConsoleArgs",
     "license": "GPL-3.0-or-later",
     "authors": [

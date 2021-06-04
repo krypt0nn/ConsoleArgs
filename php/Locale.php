@@ -76,5 +76,5 @@ final class Locale
      * @param Command|Parameter - передаёт объект команды или параметра
      * @param string            - алиас, который пытались добавить
      */
-    public $aliase_exists_exception = 'This aliase already exists';
+    public $alias_exist_exception = 'This alias already exists';
 }

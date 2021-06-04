@@ -92,7 +92,7 @@ namespace ConsoleArgs;
 
         // Аргумент - название флага
         // "-b64" - алиас флага (альтернативное название)
-        (new Flag ('--base64'))->addAliase ('-b64')
+        (new Flag ('--base64'))->addAlias ('-b64')
     ])
 ], new DefaultCommand (function ($args)
 {
@@ -156,7 +156,7 @@ namespace ConsoleArgs;
                 echo 'Every Software'. PHP_EOL;
             })
         ]))->execute ($args);
-    }))->addAliase ('aliase_test')
+    }))->addAlias ('alias_test')
 ]))->execute (array_slice ($argv, 1));
 ```
 
@@ -174,7 +174,7 @@ Enfesto Studio
 ---
 
 ```
-php index.php aliase_test 2
+php index.php alias_test 2
 ```
 
 Вывод:
@@ -199,7 +199,7 @@ $manager = new Manager ([
     }))
         ->setDescription ('Output entered message')
         ->addParams ([
-            (new Param ('--glue', ' '))->addAliase ('-g')
+            (new Param ('--glue', ' '))->addAlias ('-g')
         ])
 ]);
 
